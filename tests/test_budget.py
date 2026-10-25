@@ -22,10 +22,27 @@ def test_budget_covers_restarts():
     assert restored.allowed(now + 3600)
 
 
-def test_minimum_budget_is_15_minutes():
+def test_minimum_budget_is_one_minute():
     b = RequestBudget()
     b.mark_started(100, 1)
-    assert b.next_allowed == 1000
+    assert b.next_allowed == 160
+
+
+def test_once_per_minute_budget_and_restart_guard():
+    start = 1792965844.7303603
+    budget = RequestBudget()
+    assert budget.allowed(start)
+    budget.mark_started(start, 1)
+    for seconds in (0, 10, 30, 59.9):
+        restored = RequestBudget(next_allowed=budget.next_allowed)
+        assert not restored.allowed(start + seconds)
+    assert RequestBudget(next_allowed=budget.next_allowed).allowed(start + 60)
+
+
+def test_owner_can_choose_slower_polling():
+    budget = RequestBudget()
+    budget.mark_started(100, 30)
+    assert budget.next_allowed == 1900
 
 
 def test_429_circuit_breaker_and_forbidden():

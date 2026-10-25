@@ -90,7 +90,7 @@ class SafeConnectConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, 
 
 
 class SafeConnectOptionsFlow(OptionsFlow):
-    """Only allow low-frequency cloud reads."""
+    """Owner-configurable Ford cloud polling, minimum one minute."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:

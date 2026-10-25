@@ -35,7 +35,7 @@ class RequestBudget:
     def mark_started(self, now: float, interval_minutes: int) -> None:
         # Reserve the full budget BEFORE sending a request. Even a crash or
         # timeout cannot produce rapid successive requests on restart.
-        self.next_allowed = max(self.next_allowed, now + max(15, interval_minutes) * 60)
+        self.next_allowed = max(self.next_allowed, now + max(1, interval_minutes) * 60)
 
     def throttle(self, now: float, retry_after: int = 0) -> None:
         self.next_allowed = max(self.next_allowed, now + max(3600, retry_after))

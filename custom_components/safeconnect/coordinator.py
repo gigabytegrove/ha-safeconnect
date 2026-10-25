@@ -25,7 +25,10 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: FordQuery) -> None:
         self.entry = entry
         self.api = api
-        self.poll_minutes = int(entry.options.get(CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES))
+        # Preserve explicit slower owner choices, but a new installation
+        # defaults to a real Ford telemetry query every minute.
+        requested_poll = int(entry.options.get(CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES))
+        self.poll_minutes = max(1, min(1440, requested_poll))
         self.budget = RequestBudget()
         self.cloud_fetch_time: str | None = None
         self.request_count = 0

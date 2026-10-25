@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0-alpha.4 — 2026-10-25
+
+PERFORMANCE: Replace the arbitrary hourly Ford telemetry GET default and 15-minute minimum with a real cloud query every minute by default. Owner-configurable interval is now 1–1440 minutes. The local timer already runs each minute, while a persisted request budget ensures real cloud requests stay at or above the selected cadence across restarts.
+
+SAFETY: Continue obeying explicit slower owner preferences, prior persisted cooldown deadlines, Ford 429 Retry-After (at least one-hour backoff), auth denial and transient failure backoff. No 10-second cloud polling, vehicle wake, or false guarantees about per-door sampling freshness.
+
+TESTS: Add one-minute persistent request-budget and slower owner interval tests; update metadata and install verification.
+
+
 ## 0.2.0-alpha.3 — 2026-10-25
 
 FIX: Run a lightweight local request-budget check every minute so Home Assistant reloads/cache republishing no longer delay eligible Ford cloud queries by a full new update interval. This does NOT reduce the Ford API request interval; durable 60-minute default cooldown, 15-minute configurable minimum, and backoff still apply.

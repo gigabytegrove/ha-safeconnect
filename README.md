@@ -1,4 +1,4 @@
-# SafeConnect — Home Assistant integration (v0.2.0 alpha.3)
+# SafeConnect — Home Assistant integration (v0.2.0 alpha.4)
 
 A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.2.0 alpha.
 
@@ -10,21 +10,27 @@ After the next normal rate-limited telemetry request, the local Home Assistant D
 
 To investigate a specific vehicle, use that vehicle's own HA installation for diagnostics. **Do not commit real vehicle captures or tokens to this public repo**.
 
+## One-minute real Ford cloud polling
+
+SafeConnect now issues a real `GET /fcon-query/v1/telemetry` roughly every **60 seconds** by default when the provider allows it. This is not a cosmetic HA state refresh: every allowed interval performs an HTTPS cloud request. Independent third-party integrations using this same official endpoint report ~one permitted request per minute, but Ford does not publicly guarantee any particular rate limit. We do not enable 10-second polling because it is likely to trigger HTTP 429 responses without improving vehicle report freshness.
+
+Home Assistant **Options** allows 1–1440 minutes. A previously chosen slower interval is honored. An old persisted 60-minute request cooldown remains effective until its expiration; after that, successful queries use the new interval. On HTTP 429 the integration honors Retry-After or a one-hour cooldown, whichever is longer. Ford could still report hours-old door readings even after a successful new cloud GET.
+
 ## Cloud polling reliability
 
-SafeConnect checks the LOCAL persisted API request budget every minute, which sends **no Ford API request** until the budget permits one. This prevents HA restarts and cached-state replays from pushing an eligible cloud GET another hour into the future. Cloud pacing remains 60 minutes by default (minimum 15 minutes configurable), with a longer backoff on rate limits and errors. A GET cannot force a vehicle wake or guarantee a recent vehicle report.
+SafeConnect checks the LOCAL persisted API request budget every minute, which sends **no Ford API request** until the budget permits one. This prevents HA restarts and cached-state replays from pushing an eligible cloud GET another hour into the future. Ford cloud GET pacing is now one minute by default (configurable from 1 to 1440 minutes), with a longer backoff on rate limits and errors. A GET cannot force a vehicle wake or guarantee a recent vehicle report.
 
 Diagnostics distinguishes `local_budget_check_minutes`, `poll_minutes` (the cloud API budget), and `cloud_query_permitted_now`.
 
 ## Security telemetry freshness
 
-Door-open, hood, tailgate and door-lock entities are shown as **unavailable** whenever their individual Ford metric's report timestamp is more than 60 minutes old, is invalid, or was never supplied. Older cached data uses the vehicle-wide report timestamp as a conservative fallback. A recent cloud query is **not evidence of current vehicle state**. The integration's one-minute local timer expires these readings without contacting Ford. Each security entity has `security_sample_time` and `security_state_fresh` attributes.
+Door-open, hood, tailgate and door-lock entities are shown as **unavailable** whenever their individual Ford metric's report timestamp is more than 60 minutes old, is invalid, or was never supplied. Older cached data uses the vehicle-wide report timestamp as a conservative fallback. A recent cloud query is **not evidence of current vehicle state**. A local once-per-minute check can expire readings without contacting Ford when network requests are not yet permitted. Each security entity has `security_sample_time` and `security_state_fresh` attributes.
 
-This is a read-only official FordConnect Query integration. It cannot request a vehicle wake or claim real-time WebSocket behavior using this API. Do not use a stale lock sensor as proof that a vehicle is secured. Updated data arrives only when Ford's official query endpoint supplies it.
+This integration uses Ford's official read-only FordConnect Query API. It cannot request a vehicle wake or claim real-time WebSocket behavior using this API. Do not use a stale lock sensor as proof that a vehicle is secured. Updated data arrives only when Ford's official query endpoint supplies it.
 
 ## Current field-test status
 
-The official cloud authorization and one telemetry read have been verified in a Home Assistant installation. A local cache held non-empty values for supported fields, while the entity interface appeared empty. The alpha.1 change rebroadcasts locally restored data after entity setup, without making extra Ford API requests. Live UI confirmation is still required.
+Official OAuth and repeated Ford telemetry GETs have been verified on a real Home Assistant instance. The integration now distinguishes vehicle metric sample timestamps from cloud retrieval times. The one-minute cloud cadence has not yet been field-tested with the owner's Ford account.
 
 For a previous `safeconnect` installation, pull this repository and run `update-on-dockeradm.sh --restart`; do not register another Ford application or reauthorize just for an update.
 
@@ -35,7 +41,7 @@ For a previous `safeconnect` installation, pull this repository and run `update-
 - Ford Developer OAuth 2.0 connection through Home Assistant Application Credentials and Ford consent.
 - Native Home Assistant sensor, binary sensor, and GPS device tracker entities; cached after restart.
 - Fuel %, range, odometer, oil life, 12V battery, per-wheel tire PSI, ignition, speed, RPM, gear, door state, hood, tailgate, lock state, temperatures, GPS, and timestamps, **only where returned by Ford**.
-- Fixed 15-minute minimum / 60-minute default cloud query spacing. No vehicle status-refresh requests or wake-ups.
+- Real Ford telemetry cloud queries once per minute by default, or less often if a user-selected interval or provider cooldown applies. No vehicle status-refresh requests or wake-ups.
 - Persist request reservation **before** each HTTP call. 429 response causes >=1h cooldown, 401/403 permanently suspends automatic queries, temporary errors defer >=30m.
 - Diagnostic counters with no VIN, GPS coordinates, Ford API payloads, OAuth secrets, or personal addresses.
 - Location always last-known; cloud query frequency is not GPS frequency. No 10–30-second GPS guarantee from Ford.
@@ -45,7 +51,7 @@ For a previous `safeconnect` installation, pull this repository and run `update-
 - Remote lock/unlock is **not available in this build**. Agreed default-on command controls require a separately verified and isolated FordPass command provider. FordConnect Query itself is officially read-only. A fake or nonworking lock entity is deliberately not created.
 - Remote engine start/stop is intentionally absent. Future engine actions must never be exposed to HA scripts, services, automations, voice assistants, or webhook actions, and require a separately authenticated, manually confirmed interface with indoor/CO safety gating.
 - True live location at 10–30 seconds needs independent GPS hardware or a companion app if Ford cloud reports less frequently.
-- Ford consent, real vehicle responses, and Home Assistant runtime startup are **not verified** in this offline build environment.
+- A 60-second real cloud polling cadence has not yet been field-tested on the owner's account; Ford can still return older vehicle measurements.
 
 ## Before installing: register with Ford
 
