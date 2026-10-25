@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0-alpha.3 — 2026-10-25
+
+FIX: Run a lightweight local request-budget check every minute so Home Assistant reloads/cache republishing no longer delay eligible Ford cloud queries by a full new update interval. This does NOT reduce the Ford API request interval; durable 60-minute default cooldown, 15-minute configurable minimum, and backoff still apply.
+
+DIAGNOSTICS: Correct version string and report whether the existing cloud request budget currently permits a request. Preserve sanitized telemetry-schema capture.
+
+
 ## 0.2.0-alpha.2 — 2026-10-25
 
 DIAGNOSTICS: Capture a narrow, privacy-filtered schema and security-status/timestamp sample from each already-scheduled FordConnect telemetry response. Enables real-world testing against the vehicle without saving or distributing raw customer API responses.

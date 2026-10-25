@@ -21,7 +21,7 @@ import sys
 root = pathlib.Path(sys.argv[1])
 manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
 assert manifest["domain"] == "safeconnect" and manifest["config_flow"] is True
-assert manifest["version"] == "0.2.0a2", "Unexpected source version"
+assert manifest["version"] == "0.2.0a3", "Unexpected source version"
 for path in root.glob("*.py"):
     ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 PY

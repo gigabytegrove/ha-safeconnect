@@ -39,7 +39,11 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.store: Store[dict[str, Any]] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
         super().__init__(
             hass, _LOGGER, name=f"{DOMAIN}:{entry.entry_id}",
-            update_interval=timedelta(minutes=self.poll_minutes),
+            # This is a LOCAL check. Cloud pacing is enforced by the
+            # persistent budget inside _async_update_data, not by this
+            # timer. Cache replays/restarts reset the HA interval, so a
+            # one-minute tick prevents a due query being delayed an hour.
+            update_interval=timedelta(minutes=1),
             always_update=False,
         )
 

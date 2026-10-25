@@ -43,3 +43,13 @@ def test_retry_after_date_and_seconds():
     assert retry_after_seconds("Sun, 25 Oct 2026 00:05:00 GMT", now=now) == 300
     assert retry_after_seconds("suspicious", now=now) == 0
     assert retry_after_seconds("100000000", now=now) == 604800
+
+
+def test_local_tick_does_not_remove_hourly_budget_across_restarts():
+    first = 1792965844.476324
+    state = RequestBudget()
+    state.mark_started(first, 60)
+    for minute in range(1, 60):
+        state = RequestBudget(next_allowed=state.next_allowed)
+        assert not state.allowed(first + minute * 60)
+    assert state.allowed(first + 3600)

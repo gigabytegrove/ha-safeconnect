@@ -1,4 +1,4 @@
-# SafeConnect — Home Assistant integration (v0.2.0 alpha.2)
+# SafeConnect — Home Assistant integration (v0.2.0 alpha.3)
 
 A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.2.0 alpha.
 
@@ -9,6 +9,12 @@ The owner-supplied FordConnect 2.0 Postman collection describes OAuth token exch
 After the next normal rate-limited telemetry request, the local Home Assistant Diagnostics download contains `telemetry_schema`: a tightly allowlisted summary of door/lock/hood status records and their actual vehicle timestamps, plus metric field names. It never records raw JSON, VIN, GPS coordinates, account tokens, correlation identifiers, or opaque response metadata.
 
 To investigate a specific vehicle, use that vehicle's own HA installation for diagnostics. **Do not commit real vehicle captures or tokens to this public repo**.
+
+## Cloud polling reliability
+
+SafeConnect checks the LOCAL persisted API request budget every minute, which sends **no Ford API request** until the budget permits one. This prevents HA restarts and cached-state replays from pushing an eligible cloud GET another hour into the future. Cloud pacing remains 60 minutes by default (minimum 15 minutes configurable), with a longer backoff on rate limits and errors. A GET cannot force a vehicle wake or guarantee a recent vehicle report.
+
+Diagnostics distinguishes `local_budget_check_minutes`, `poll_minutes` (the cloud API budget), and `cloud_query_permitted_now`.
 
 ## Security telemetry freshness
 

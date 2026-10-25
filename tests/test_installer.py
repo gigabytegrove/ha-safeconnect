@@ -97,7 +97,7 @@ def test_safe_update_preserves_config_and_backs_up(tmp_path):
     (storage / 'safeconnect.persisted').write_text('token-store-must-survive')
     r = subprocess.run(['bash', str(upgrade), '--restart'], env=env, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
-    assert json.loads(manifest.read_text())['version'] == '0.2.0a2'
+    assert json.loads(manifest.read_text())['version'] == '0.2.0a3'
     backups = list((config / '.safeconnect-backups').glob('safeconnect-*'))
     assert len(backups) == 1
     assert json.loads((backups[0] / 'manifest.json').read_text())['version'] == '0.2.0a0'
