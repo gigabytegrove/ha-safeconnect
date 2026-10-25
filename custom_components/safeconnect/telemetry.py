@@ -205,24 +205,26 @@ def normalize(payload: dict[str, Any]) -> dict[str, Any]:
         if lock_times:
             result["lock_state_sample_time"] = min(lock_times)
 
-    position = _first(metrics, "position")
-    if isinstance(position, dict):
+    # Position can be a single metric record OR a list. Choose the newest
+    # valid coordinate pair, not the first item, and keep its own timestamp.
+    candidates: list[tuple[str | None, float, float]] = []
+    for record in _records(metrics, "position"):
+        position = record.get("value")
+        if not isinstance(position, dict):
+            continue
         loc = position.get("location")
-        if isinstance(loc, dict):
-            lat = _number(loc.get("lat"))
-            lon = _number(loc.get("lon"))
-            if lat is not None and lon is not None and -90 <= lat <= 90 and -180 <= lon <= 180:
-                result["latitude"] = lat
-                result["longitude"] = lon
-        # Do not call this "now": it is the vehicle's report time.
-
-    timestamps = [
-        _as_iso(record.get("updateTime"))
-        for record in _records(metrics, "position")
-    ]
-    position_time = next((item for item in timestamps if item), None)
-    if position_time:
-        result["location_sample_time"] = position_time
+        if not isinstance(loc, dict):
+            continue
+        lat = _number(loc.get("lat"))
+        lon = _number(loc.get("lon"))
+        if lat is not None and lon is not None and -90 <= lat <= 90 and -180 <= lon <= 180:
+            candidates.append((_as_iso(record.get("updateTime")), lat, lon))
+    if candidates:
+        timestamp, lat, lon = max(candidates, key=lambda v: (v[0] is not None, v[0] or ""))
+        result["latitude"] = lat
+        result["longitude"] = lon
+        if timestamp:
+            result["location_sample_time"] = timestamp
     top_time = _as_iso(payload.get("updateTime"))
     if top_time:
         result["vehicle_update_time"] = top_time

@@ -1,4 +1,4 @@
-# SafeConnect — Home Assistant integration (v0.2.0 alpha.4)
+# SafeConnect — Home Assistant integration (v0.2.0 alpha.5)
 
 A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.2.0 alpha.
 
@@ -9,6 +9,14 @@ The owner-supplied FordConnect 2.0 Postman collection describes OAuth token exch
 After the next normal rate-limited telemetry request, the local Home Assistant Diagnostics download contains `telemetry_schema`: a tightly allowlisted summary of door/lock/hood status records and their actual vehicle timestamps, plus metric field names. It never records raw JSON, VIN, GPS coordinates, account tokens, correlation identifiers, or opaque response metadata.
 
 To investigate a specific vehicle, use that vehicle's own HA installation for diagnostics. **Do not commit real vehicle captures or tokens to this public repo**.
+
+## GPS coordinates, freshness and Home Assistant maps
+
+**Where are the coordinates?** Home Assistant's GPS `device_tracker` represents a zone (`home`/`not_home`/zone name) as its primary state; its latitude and longitude appear in attributes, not as the state text. SafeConnect now also provides **GPS latitude**, **GPS longitude**, **GPS sample age** (minutes, locally refreshed), and its existing **GPS report time** sensor. All coordinate values are stored only within the owner's Home Assistant instance and are deliberately absent from downloaded diagnostics and source.
+
+The map tracker remains **Last known vehicle location**; it includes `last_gps_reported_at`, `gps_stale` (over five minutes old), `gps_sample_age_minutes`, and `is_live_tracking: false`. Being in a zone is NOT evidence that this position was just updated by Ford. SafeConnect retains the most recent timestamped Ford GPS fix across older cloud responses; no false current GPS point is generated.
+
+**Important:** FordConnect Query provides last-reported `metrics.position.value.location.lat/lon` telemetry and a per-position `updateTime`, but Ford need not send a new GPS fix every minute. If newer Ford API responses carry old position samples, the integration cannot manufacture live tracking. To inspect locally, use Home Assistant Developer Tools → States to view GPS latitude/longitude sensors, the tracker attributes, and GPS sample age. Diagnostics includes presence/freshness only, not coordinates.
 
 ## One-minute real Ford cloud polling
 

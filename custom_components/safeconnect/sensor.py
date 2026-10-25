@@ -1,6 +1,10 @@
 """Ford vehicle telemetry sensors. Read-only by construction."""
 from __future__ import annotations
 from dataclasses import dataclass
+from datetime import timedelta
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_time_interval
+from .gps import gps_age_seconds
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -44,12 +48,19 @@ SPECS: tuple[SensorSpec, ...] = (
     SensorSpec("tire_system_status", "Tire monitoring status", icon="mdi:car-tire-alert"),
     SensorSpec("vehicle_update_time", "Vehicle report time", device_class=SensorDeviceClass.TIMESTAMP),
     SensorSpec("location_sample_time", "GPS report time", device_class=SensorDeviceClass.TIMESTAMP),
+    # These numeric states make Ford's last-known coordinates directly
+    # available in HA dashboards and automations. They remain LOCAL to HA.
+    SensorSpec("latitude", "GPS latitude", "°", icon="mdi:crosshairs-gps"),
+    SensorSpec("longitude", "GPS longitude", "°", icon="mdi:crosshairs-gps"),
 )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SafeConnectSensor(coordinator, spec) for spec in SPECS])
+    async_add_entities(
+        [SafeConnectSensor(coordinator, spec) for spec in SPECS]
+        + [SafeConnectGpsAgeSensor(coordinator)]
+    )
 
 
 class SafeConnectSensor(SafeConnectEntity, SensorEntity):
@@ -60,6 +71,9 @@ class SafeConnectSensor(SafeConnectEntity, SensorEntity):
         self._attr_device_class = spec.device_class
         self._attr_state_class = spec.state_class
         self._attr_icon = spec.icon
+        if spec.key in ("latitude", "longitude"):
+            # Keep useful location precision in the HA UI and automations.
+            self._attr_suggested_display_precision = 6
 
     @property
     def native_value(self):
@@ -68,3 +82,36 @@ class SafeConnectSensor(SafeConnectEntity, SensorEntity):
             from datetime import datetime
             return datetime.fromisoformat(value)
         return value
+
+
+class SafeConnectGpsAgeSensor(SafeConnectEntity, SensorEntity):
+    """Minutes since the vehicle's GPS sample, NOT since SafeConnect queried Ford."""
+
+    _attr_name = "GPS sample age"
+    _attr_native_unit_of_measurement = "min"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:clock-outline"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "location_sample_time")
+        # Distinct from the existing GPS report-time sensor.
+        self._attr_unique_id = (
+            f"{coordinator.entry.data['vin']}_gps_sample_age"
+        )
+
+    @property
+    def native_value(self):
+        age = gps_age_seconds(self.coordinator.data or {})
+        return round(age / 60, 1) if age is not None else None
+
+    @callback
+    def _local_age_tick(self, _now) -> None:
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._local_age_tick, timedelta(minutes=1)
+            )
+        )

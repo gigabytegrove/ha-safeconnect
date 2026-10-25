@@ -34,7 +34,7 @@ if docker exec "$HA_CONTAINER" test -e /config/custom_components/safeconnect; th
     exit 3
 fi
 
-echo "Installing SafeConnect 0.2.0 alpha.4 into '$HA_CONTAINER' (/config is $CONFIG_MOUNT-mounted)."
+echo "Installing SafeConnect 0.2.0 alpha.5 into '$HA_CONTAINER' (/config is $CONFIG_MOUNT-mounted)."
 docker cp "$SOURCE" "$HA_CONTAINER:/config/custom_components/safeconnect"
 docker exec "$HA_CONTAINER" test -f /config/custom_components/safeconnect/manifest.json
 printf 'INSTALLED: /config/custom_components/safeconnect\n'

@@ -14,6 +14,7 @@ from .budget import RequestBudget
 from .telemetry import normalize
 from .telemetry_audit import summarize_security_response
 from .freshness import SECURITY_KEYS
+from .gps import preserve_newer_gps
 from .const import DOMAIN, CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
@@ -151,6 +152,7 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.last_http_error = None
         # Preserve old values if Ford omits a metric for this response;
         # never substitute a made-up "fresh" vehicle sample time.
+        values = preserve_newer_gps(self.data or {}, values)
         merged = {**(self.data or {}), **values}
         await self._save_now(merged)
         return merged

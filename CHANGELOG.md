@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0-alpha.5 — 2026-10-25
+
+GPS: Expose GPS latitude and longitude as standalone numerical Home Assistant sensors, plus a locally refreshed GPS sample-age sensor (minutes). Keep the existing last-known GPS device tracker and GPS report timestamp sensor.
+
+GPS RELIABILITY: Select the most recent valid Ford position record when multiple records are supplied, and do not replace a newer GPS fix with an older or undated cloud response. GPS freshness refers to the position's report timestamp, never the HTTP request time.
+
+DIAGNOSTICS: Show whether coordinates exist and their position report age without exporting coordinates. Tracker attributes indicate stale GPS after five minutes; they do NOT imply live tracking. No vehicle wake/force-refresh is introduced.
+
+TESTS: Synthetic coordinates only, no identifying vehicle data in commits. Add GPS freshness, monotonic cache, parsing, entity-surface and privacy regression tests.
+
+
 ## 0.2.0-alpha.4 — 2026-10-25
 
 PERFORMANCE: Replace the arbitrary hourly Ford telemetry GET default and 15-minute minimum with a real cloud query every minute by default. Owner-configurable interval is now 1–1440 minutes. The local timer already runs each minute, while a persisted request budget ensures real cloud requests stay at or above the selected cadence across restarts.

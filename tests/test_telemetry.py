@@ -162,3 +162,26 @@ def test_security_sample_pinned_to_its_own_snapshot():
     combined = {**result, **newer}
     assert combined["door_front_left_open_sample_time"] == "2026-10-25T12:05:00+00:00"
     assert combined["lock_state_sample_time"] == "2026-10-25T12:05:00+00:00"
+
+def test_choose_latest_gps_from_multiple_records():
+    item = sample()
+    item["metrics"]["position"] = [
+        {"value": {"location": {"lat": 12.3, "lon": -45.6}}, "updateTime": "2026-10-25T10:00:00Z"},
+        {"value": {"location": {"lat": 12.5, "lon": -45.8}}, "updateTime": "2026-10-25T10:05:00Z"},
+        {"value": {"location": {"lat": 12.4, "lon": -45.7}}, "updateTime": "2026-10-25T10:03:00Z"},
+    ]
+    result = normalize(item)
+    assert result["latitude"] == 12.5
+    assert result["longitude"] == -45.8
+    assert result["location_sample_time"] == "2026-10-25T10:05:00+00:00"
+
+
+def test_invalid_newer_gps_cannot_win():
+    item = sample()
+    item["metrics"]["position"] = [
+        {"value": {"location": {"lat": 12.4, "lon": -45.7}}, "updateTime": "2026-10-25T10:00:00Z"},
+        {"value": {"location": {"lat": 999, "lon": -45.8}}, "updateTime": "2026-10-25T11:00:00Z"},
+    ]
+    result = normalize(item)
+    assert result["latitude"] == 12.4
+    assert result["location_sample_time"] == "2026-10-25T10:00:00+00:00"
