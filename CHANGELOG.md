@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 — 2026-10-25
+
+FIX: OAuth config flow now declares the required `DOMAIN` class attribute; Home Assistant's OAuth flow handler rejected the prior class with TypeError, consistent with the 500 config-flow error.
+
+NEW: Stage-and-backup updater for existing Docker installations, preserving Home Assistant config entries, credentials and cache. Add a config-flow contract regression test and upgrade tests.
+
+VERIFICATION: Offline tests; no live Ford account or actual Home Assistant container was accessible.
+
+
 ## 0.1.0 — 2026-10-25
 
 NEW: Independent FordConnect read-only API client, single-vehicle OAuth setup, HA entities, defensive parser, API rate-budget persistence, diagnostics, Docker-host installer and offline tests.

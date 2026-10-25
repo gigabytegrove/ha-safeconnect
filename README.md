@@ -1,6 +1,6 @@
-# SafeFord 0.1.0 — First installable build
+# SafeFord 0.1.1 — OAuth config-flow hotfix
 
-A native Home Assistant integration for FordConnect Query, intended for a **2025 Ford Maverick** and other supported Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.1.0.
+A native Home Assistant integration for FordConnect Query, intended for a **2025 Ford Maverick** and other supported Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.1.1.
 
 ## Implemented
 
@@ -42,17 +42,29 @@ sudo bash install-on-dockeradm.sh --restart
 
 The installer will refuse to overwrite an existing SafeFord directory. You can also use the packaged ZIP.
 
-## Install — on dockeradm (Docker host, not HA container)
+## Upgrade an existing SafeFord installation
 
-Transfer and unzip `SafeFord-0.1.0.zip` to a directory on dockeradm, then run from that directory:
+From the existing Git checkout on your Docker host, update the repository and run the **updater** (not the first-time installer):
 
 ```bash
-unzip SafeFord-0.1.0.zip -d safeford-0.1.0
-cd safeford-0.1.0
+cd ha-safeford
+git pull --ff-only
+sudo bash update-on-dockeradm.sh --restart
+```
+
+The updater requires the already-installed /config/custom_components/safeford directory and a persistent /config mount. It stages the replacement, saves the previous files under /config/.safeford-backups/, then swaps the directories. It preserves HA config entries, OAuth credentials and telemetry cache. It never issues vehicle commands. The HA container restarts only if --restart was explicitly supplied.
+
+## Install — on dockeradm (Docker host, not HA container)
+
+Transfer and unzip `SafeFord-0.1.1.zip` to a directory on dockeradm, then run from that directory:
+
+```bash
+unzip SafeFord-0.1.1.zip -d safeford-0.1.1
+cd safeford-0.1.1
 sudo bash install-on-dockeradm.sh --restart
 ```
 
-Default Home Assistant container name is `homeassistant`. If yours differs: `sudo HA_CONTAINER=my-container bash install-on-dockeradm.sh --restart`. The installer **requires persistent /config Docker bind/volume**, avoids touching existing SafeFord installs, and does not restart HA unless `--restart` is used.
+Default Home Assistant container name is `homeassistant`. If yours differs: `sudo HA_CONTAINER=my-container bash install-on-dockeradm.sh --restart`. The installer **requires persistent /config Docker bind/volume**, refuses existing SafeFord installs (use update-on-dockeradm.sh instead), and does not restart HA unless `--restart` is used.
 
 Home Assistant: **Settings → Devices & services → Add integration → SafeFord**. Register the Ford Application Credentials when prompted (client ID/secret from Ford), approve access to one vehicle in the browser, and complete the `my.home-assistant.io` callback. Ensure the HA instance URL on the intermediary page points to your actual reachable HA URL. SafeFord does not require HTTPS for the HA LAN URL if Ford's redirect is the HTTPS intermediary URL.
 
@@ -72,6 +84,7 @@ Configure query interval via integration **Configure**. Default is 60 minutes; n
 python3 -m compileall -q custom_components/safeford
 python3 -m pytest -q tests
 bash -n install-on-dockeradm.sh
+bash -n update-on-dockeradm.sh
 ```
 
 The offline unit tests verify representative Ford payload parsing and rate-limit behavior. Real API integration requires testing with your own Ford developer authorization and Maverick.

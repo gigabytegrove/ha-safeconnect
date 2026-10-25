@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 class SafeFordConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Authenticate through an owner-registered Ford Developer OAuth app."""
 
+    # AbstractOAuth2FlowHandler.__init__ requires this class attribute.
+    # Class registration via domain=DOMAIN does not populate it.
+    DOMAIN = DOMAIN
     VERSION = 1
 
     @property
