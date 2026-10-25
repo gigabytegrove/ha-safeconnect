@@ -35,14 +35,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    if cached and isinstance(coordinator.data, dict):
-        # Cached data is restored before the platform entities subscribe.
-        # Republish it after setup so every subscribed entity gets an
-        # explicit state update, even if Ford does not respond for another
-        # hour. This is entirely local: NO HTTP requests or vehicle wakes.
+    if isinstance(coordinator.data, dict) and coordinator.data:
+        # Both the initial cloud fetch and a restored cache occur before the
+        # entity platforms subscribe. Republish existing data once after
+        # platform setup to guarantee an entity-state notification. This
+        # performs NO Ford HTTP requests and never wakes the vehicle.
         coordinator.async_set_updated_data(dict(coordinator.data))
         _LOGGER.debug(
-            "SafeConnect republished %d locally cached telemetry fields",
+            "SafeConnect republished %d local telemetry fields",
             len(coordinator.data),
         )
     entry.async_on_unload(entry.add_update_listener(_update_listener))
