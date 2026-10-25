@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0-alpha.2 — 2026-10-25
+
+DIAGNOSTICS: Capture a narrow, privacy-filtered schema and security-status/timestamp sample from each already-scheduled FordConnect telemetry response. Enables real-world testing against the vehicle without saving or distributing raw customer API responses.
+
+FIX: Older Ford vehicle snapshots no longer present doors/hood/tailgate or lock state as current. After 60 minutes from the vehicle metric's report time, these entities become unavailable, rather than presenting old Open or Unlocked values without warning.
+
+FIX: Extract per-door, hood, and lock sample timestamps when supplied, and prefer newer door reports when duplicate records exist. Historical caches use the vehicle-wide report timestamp when no metric timestamp exists.
+
+SAFETY: One-minute local freshness checks do not make Ford network requests, reset cloud request cooldowns, or send vehicle commands. Expose sample-time attributes without leaking VIN, location or authentication.
+
+LIMITATION: This does not make Ford's official Query API live. Whether FordPass mobile presents newer backend state via a different channel needs separate verification.
+
+
 ## 0.2.0-alpha.1 — 2026-10-25
 
 FIX: Explicitly republish previously cached telemetry to the newly subscribed Home Assistant entities after their platforms finish setup. This local state synchronization does not contact Ford or reset account lockout protections.

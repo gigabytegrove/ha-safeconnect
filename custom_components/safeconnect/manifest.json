@@ -1,7 +1,7 @@
 {
   "domain": "safeconnect",
   "name": "SafeConnect",
-  "version": "0.2.0a1",
+  "version": "0.2.0a2",
   "documentation": "https://github.com/gigabytegrove/ha-safeconnect",
   "codeowners": [],
   "config_flow": true,

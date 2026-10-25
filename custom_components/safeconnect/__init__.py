@@ -8,6 +8,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import Platform
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_time_interval
+from datetime import timedelta
+from .freshness import SECURITY_KEYS, security_state_is_fresh
 from .api import FordQuery
 from .coordinator import SafeConnectCoordinator
 from .const import DOMAIN
@@ -45,6 +49,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "SafeConnect republished %d local telemetry fields",
             len(coordinator.data),
         )
+    # Security samples expire even when the hourly cloud budget forbids
+    # another GET. A once-a-minute LOCAL timer republishes states only when
+    # freshness changes, so HA doesn't claim an old open/lock state is live.
+    last_security_freshness = tuple(
+        security_state_is_fresh(coordinator.data or {}, key)
+        for key in sorted(SECURITY_KEYS)
+    )
+
+    @callback
+    def _update_local_freshness(_now) -> None:
+        nonlocal last_security_freshness
+        values = coordinator.data or {}
+        current = tuple(
+            security_state_is_fresh(values, key)
+            for key in sorted(SECURITY_KEYS)
+        )
+        if current != last_security_freshness:
+            last_security_freshness = current
+            if values:
+                coordinator.async_set_updated_data(dict(values))
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _update_local_freshness, timedelta(minutes=1))
+    )
     entry.async_on_unload(entry.add_update_listener(_update_listener))
     return True
 

@@ -1,6 +1,20 @@
-# SafeConnect — Home Assistant integration (v0.2.0 alpha.1)
+# SafeConnect — Home Assistant integration (v0.2.0 alpha.2)
 
 A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.2.0 alpha.
+
+## SafeConnect official Postman reference and field validation
+
+The owner-supplied FordConnect 2.0 Postman collection describes OAuth token exchange with `POST` and read-only `GET /fcon-query/v1/telemetry` and `GET /fcon-query/v1/garage`. A telemetry `GET` is **not** a command to wake or refresh the vehicle.
+
+After the next normal rate-limited telemetry request, the local Home Assistant Diagnostics download contains `telemetry_schema`: a tightly allowlisted summary of door/lock/hood status records and their actual vehicle timestamps, plus metric field names. It never records raw JSON, VIN, GPS coordinates, account tokens, correlation identifiers, or opaque response metadata.
+
+To investigate a specific vehicle, use that vehicle's own HA installation for diagnostics. **Do not commit real vehicle captures or tokens to this public repo**.
+
+## Security telemetry freshness
+
+Door-open, hood, tailgate and door-lock entities are shown as **unavailable** whenever their individual Ford metric's report timestamp is more than 60 minutes old, is invalid, or was never supplied. Older cached data uses the vehicle-wide report timestamp as a conservative fallback. A recent cloud query is **not evidence of current vehicle state**. The integration's one-minute local timer expires these readings without contacting Ford. Each security entity has `security_sample_time` and `security_state_fresh` attributes.
+
+This is a read-only official FordConnect Query integration. It cannot request a vehicle wake or claim real-time WebSocket behavior using this API. Do not use a stale lock sensor as proof that a vehicle is secured. Updated data arrives only when Ford's official query endpoint supplies it.
 
 ## Current field-test status
 

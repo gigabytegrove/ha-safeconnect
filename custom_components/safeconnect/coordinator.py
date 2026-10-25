@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import FordQuery, FordAccessDenied, FordThrottled, FordTransient
 from .budget import RequestBudget
 from .telemetry import normalize
+from .telemetry_audit import summarize_security_response
 from .const import DOMAIN, CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.rate_limited_count = 0
         self.error_count = 0
         self.last_http_error: str | None = None
+        self.telemetry_audit: dict[str, Any] = {}
         self.authorization_epoch = int(entry.data.get("authorization_epoch", 0))
         self.last_options = dict(entry.options)
         self.last_access_token = entry.data.get("token", {}).get("access_token")
@@ -56,6 +58,8 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.rate_limited_count = int(saved.get("rate_limited_count", 0))
         self.error_count = int(saved.get("error_count", 0))
         self.last_http_error = saved.get("last_http_error")
+        audit = saved.get("telemetry_audit")
+        self.telemetry_audit = audit if isinstance(audit, dict) else {}
         values = saved.get("values")
         if isinstance(values, dict) and values:
             # Restoring cache NEVER triggers a vehicle wake or status refresh.
@@ -73,6 +77,7 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "rate_limited_count": self.rate_limited_count,
             "error_count": self.error_count,
             "last_http_error": self.last_http_error,
+            "telemetry_audit": self.telemetry_audit,
             "values": values_override if values_override is not None else (self.data if isinstance(self.data, dict) else {}),
         }
 
@@ -99,6 +104,9 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             raw = await self.api.telemetry()
             values = normalize(raw)
+            # Retain only allowlisted nonidentifying diagnostic information.
+            # No VIN, positions, bearer tokens or raw API payloads are saved.
+            self.telemetry_audit = summarize_security_response(raw)
         except FordThrottled as exc:
             self.rate_limited_count += 1
             self.last_http_error = "429"

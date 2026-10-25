@@ -144,16 +144,31 @@ def normalize(payload: dict[str, Any]) -> dict[str, Any]:
         key = _door_key(record)
         opened = _as_open(record.get("value"))
         if key and opened is not None:
-            result[key + "_open"] = opened
-    hood = _as_open(_first(metrics, "hoodStatus"))
+            field = key + "_open"
+            record_time = _as_iso(record.get("updateTime"))
+            previous_time = result.get(field + "_sample_time")
+            # When multiple records describe a door, prefer the most recent
+            # documented measurement, not whichever happens to appear last.
+            if previous_time and (not record_time or record_time < previous_time):
+                continue
+            result[field] = opened
+            if record_time:
+                result[field + "_sample_time"] = record_time
+    hood_records = _records(metrics, "hoodStatus")
+    hood = _as_open(hood_records[0]["value"]) if hood_records else None
     if hood is not None:
         result["hood_open"] = hood
+        hood_time = _as_iso(hood_records[0].get("updateTime"))
+        if hood_time:
+            result["hood_open_sample_time"] = hood_time
 
     # Ford can report a lock value for each door or ALL_DOORS. Don't report
     # 'locked' if individual doors disagree. Unknown remains unknown.
     locks: list[str] = []
+    lock_times: list[str] = []
     unknown_locks = False
     all_doors_report: str | None = None
+    all_doors_time: str | None = None
     for record in _records(metrics, "doorLockStatus") + _records(metrics, "lockStatus"):
         value = record.get("value")
         if not isinstance(value, str):
@@ -165,12 +180,19 @@ def normalize(payload: dict[str, Any]) -> dict[str, Any]:
         if state not in {"LOCKED", "UNLOCKED"}:
             unknown_locks = True
             continue
+        report_time = _as_iso(record.get("updateTime"))
         if str(record.get("vehicleDoor", "")).upper() == "ALL_DOORS":
-            all_doors_report = state
+            if all_doors_report is None or not all_doors_time or (report_time and report_time >= all_doors_time):
+                all_doors_report = state
+                all_doors_time = report_time
             continue
         locks.append(state)
+        if report_time:
+            lock_times.append(report_time)
     if all_doors_report is not None:
         result["lock_state"] = all_doors_report.lower()
+        if all_doors_time:
+            result["lock_state_sample_time"] = all_doors_time
     elif locks:
         result["lock_state"] = (
             "mixed" if "LOCKED" in locks and "UNLOCKED" in locks
@@ -178,6 +200,10 @@ def normalize(payload: dict[str, Any]) -> dict[str, Any]:
             else "locked" if all(x == "LOCKED" for x in locks)
             else "unlocked"
         )
+        # When aggregate status depends on several doors, use the oldest
+        # constituent report time. A single old reading makes it stale.
+        if lock_times:
+            result["lock_state_sample_time"] = min(lock_times)
 
     position = _first(metrics, "position")
     if isinstance(position, dict):

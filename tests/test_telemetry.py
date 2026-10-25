@@ -131,3 +131,19 @@ def test_vehicle_activity_is_not_guessed_parked():
     assert normalize(item)["vehicle_activity"] == "running"
     item["metrics"]["speed"] = {"value": 45.0}
     assert normalize(item)["vehicle_activity"] == "moving"
+
+def test_security_metric_timestamps_and_latest_record_win():
+    item = sample()
+    item["metrics"]["doorStatus"] = [
+        {"vehicleDoor": "FRONT_LEFT", "value": "OPEN", "updateTime": "2026-10-25T10:01:00Z"},
+        {"vehicleDoor": "FRONT_LEFT", "value": "CLOSED", "updateTime": "2026-10-25T10:05:00Z"},
+        {"vehicleDoor": "FRONT_LEFT", "value": "OPEN", "updateTime": "2026-10-25T10:03:00Z"},
+    ]
+    item["metrics"]["doorLockStatus"] = [
+        {"vehicleDoor": "ALL_DOORS", "value": "LOCKED", "updateTime": "2026-10-25T10:05:00Z"}
+    ]
+    result = normalize(item)
+    assert result["door_front_left_open"] is False
+    assert result["door_front_left_open_sample_time"] == "2026-10-25T10:05:00+00:00"
+    assert result["lock_state"] == "locked"
+    assert result["lock_state_sample_time"] == "2026-10-25T10:05:00+00:00"
