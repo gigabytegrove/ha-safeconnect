@@ -13,6 +13,7 @@ from .api import FordQuery, FordAccessDenied, FordThrottled, FordTransient
 from .budget import RequestBudget
 from .telemetry import normalize
 from .telemetry_audit import summarize_security_response
+from .freshness import SECURITY_KEYS
 from .const import DOMAIN, CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,6 +63,13 @@ class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.telemetry_audit = audit if isinstance(audit, dict) else {}
         values = saved.get("values")
         if isinstance(values, dict) and values:
+            # Cache migration: assign old security readings the original
+            # report timestamp once, so newer top-level reports cannot make
+            # a retained old OPEN/UNLOCKED value appear current.
+            for key in SECURITY_KEYS:
+                stamp = key + "_sample_time"
+                if key in values and stamp not in values:
+                    values[stamp] = values.get("vehicle_update_time")
             # Restoring cache NEVER triggers a vehicle wake or status refresh.
             self.async_set_updated_data(values)
             return True

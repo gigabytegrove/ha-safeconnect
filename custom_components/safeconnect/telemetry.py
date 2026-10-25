@@ -226,4 +226,15 @@ def normalize(payload: dict[str, Any]) -> dict[str, Any]:
     top_time = _as_iso(payload.get("updateTime"))
     if top_time:
         result["vehicle_update_time"] = top_time
+
+    # Pin each new security value to its OWN snapshot's report time.
+    # If that field is missing in a future query, a newer vehicle-wide
+    # timestamp MUST NOT make its old value look fresh.
+    for key in (
+        "door_front_left_open", "door_front_right_open",
+        "door_rear_left_open", "door_rear_right_open",
+        "tailgate_open", "hood_open", "lock_state",
+    ):
+        if key in result and key + "_sample_time" not in result:
+            result[key + "_sample_time"] = top_time
     return result

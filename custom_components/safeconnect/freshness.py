@@ -35,8 +35,9 @@ def _parse_timestamp(value: Any) -> datetime | None:
 
 def security_sample_time(values: dict[str, Any], key: str) -> str | None:
     """Prefer the metric's timestamp; fall back only for older cache formats."""
-    value = values.get(key + "_sample_time")
-    if value is not None:
+    stamp = key + "_sample_time"
+    if stamp in values:
+        value = values[stamp]
         return value if isinstance(value, str) else None
     older = values.get("vehicle_update_time")
     return older if isinstance(older, str) else None

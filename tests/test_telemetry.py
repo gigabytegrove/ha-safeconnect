@@ -147,3 +147,18 @@ def test_security_metric_timestamps_and_latest_record_win():
     assert result["door_front_left_open_sample_time"] == "2026-10-25T10:05:00+00:00"
     assert result["lock_state"] == "locked"
     assert result["lock_state_sample_time"] == "2026-10-25T10:05:00+00:00"
+
+def test_security_sample_pinned_to_its_own_snapshot():
+    item = sample()
+    item["updateTime"] = "2026-10-25T12:05:00Z"
+    result = normalize(item)
+    assert result["door_front_left_open_sample_time"] == "2026-10-25T12:05:00+00:00"
+    assert result["lock_state_sample_time"] == "2026-10-25T12:05:00+00:00"
+    # Later cloud response omits all security metrics: no replacement times.
+    newer = normalize({
+        "updateTime": "2026-10-25T13:00:00Z",
+        "metrics": {"fuelLevel": {"value": 60}},
+    })
+    combined = {**result, **newer}
+    assert combined["door_front_left_open_sample_time"] == "2026-10-25T12:05:00+00:00"
+    assert combined["lock_state_sample_time"] == "2026-10-25T12:05:00+00:00"
