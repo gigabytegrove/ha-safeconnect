@@ -14,15 +14,16 @@ normalize = module.normalize
 
 
 def sample():
+    # Synthetic identifier and coordinates only; not a real vehicle.
     return {
-        "vin": "3FTTW8B91SRA12345",
+        "vin": "EXAMPLE_ONLY_NOT_A_VIN",
         "access_token": "never-store-me",
         "updateTime": "2026-10-25T11:00:00Z",
         "metrics": {
-            "position": {"value": {"location": {"lat": 30.8321, "lon": -83.2803}}, "updateTime": "2026-10-25T10:45:00Z"},
+            "position": {"value": {"location": {"lat": 12.3456, "lon": -45.6789}}, "updateTime": "2026-10-25T10:45:00Z"},
             "fuelLevel": {"value": 64.5},
             "fuelRange": {"value": 415},
-            "odometer": {"value": 28002.3},
+            "odometer": {"value": 12345.6},
             "oilLifeRemaining": {"value": 74},
             "ignitionStatus": {"value": "OFF"},
             "tirePressure": [
@@ -42,7 +43,7 @@ def sample():
     }
 
 
-def test_main_maverick_telemetry():
+def test_main_vehicle_telemetry():
     result = normalize(sample())
     assert result["fuel_percent"] == 64.5
     assert result["fuel_range_mi"] == pytest.approx(257.9)
@@ -52,8 +53,8 @@ def test_main_maverick_telemetry():
     assert result["door_front_right_open"] is True
     assert result["door_front_left_open"] is False
     assert result["door_rear_left_open"] is True
-    assert result["latitude"] == 30.8321
-    assert result["longitude"] == -83.2803
+    assert result["latitude"] == 12.3456
+    assert result["longitude"] == -45.6789
     assert result["location_sample_time"] == "2026-10-25T10:45:00+00:00"
     assert result["vehicle_update_time"] == "2026-10-25T11:00:00+00:00"
     assert "vin" not in result and "access_token" not in result

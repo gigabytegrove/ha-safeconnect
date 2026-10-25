@@ -1,6 +1,6 @@
 # SafeFord 0.1.1 — OAuth config-flow hotfix
 
-A native Home Assistant integration for FordConnect Query, intended for a **2025 Ford Maverick** and other supported Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.1.1.
+A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.1.1.
 
 ## Implemented
 
@@ -31,7 +31,7 @@ Reference setup walkthrough: https://github.com/marq24/ha-fordconnect-query/blob
 
 ## Install from GitHub
 
-The source of truth is [gigabytegrove/ha-safeford](https://github.com/gigabytegrove/ha-safeford). **Private repository:** HACS does not support installing private GitHub repositories. Use the authenticated Git installation below until you intentionally make the repository public. The included `hacs.json` is preparation for future public HACS distribution; it is not a claim of current HACS availability.
+The source of truth is [gigabytegrove/ha-safeford](https://github.com/gigabytegrove/ha-safeford). **Public repository:** SafeFord's source is publicly available on GitHub. Inclusion in the default HACS catalogue has not been submitted or verified. The included `hacs.json` supports future distribution; it does not establish HACS approval.
 
 For a Docker host with Git access, clone the repository on the host (using an appropriately scoped GitHub credential for this private repo), then run:
 
@@ -87,4 +87,4 @@ bash -n install-on-dockeradm.sh
 bash -n update-on-dockeradm.sh
 ```
 
-The offline unit tests verify representative Ford payload parsing and rate-limit behavior. Real API integration requires testing with your own Ford developer authorization and Maverick.
+The offline unit tests verify representative Ford payload parsing and rate-limit behavior. Real API integration requires testing with your own Ford developer authorization and a compatible test vehicle.
