@@ -31,7 +31,7 @@ Reference setup walkthrough: https://github.com/marq24/ha-fordconnect-query/blob
 
 ## Install from GitHub
 
-The source of truth is [gigabytegrove/ha-safeford](https://github.com/gigabytegrove/ha-safeford). For HACS, add `https://github.com/gigabytegrove/ha-safeford` as a custom **Integration** repository, install SafeFord, and restart Home Assistant. Because the repository is currently private, your HACS GitHub account must have access.
+The source of truth is [gigabytegrove/ha-safeford](https://github.com/gigabytegrove/ha-safeford). **Private repository:** HACS does not support installing private GitHub repositories. Use the authenticated Git installation below until you intentionally make the repository public. The included `hacs.json` is preparation for future public HACS distribution; it is not a claim of current HACS availability.
 
 For a Docker host with Git access, clone the repository on the host (using an appropriately scoped GitHub credential for this private repo), then run:
 
