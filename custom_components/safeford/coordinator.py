@@ -1,0 +1,133 @@
+"""Cached FordConnect coordinator with durable request reservations."""
+from __future__ import annotations
+import logging
+import time
+from datetime import datetime, timedelta, timezone
+from typing import Any
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from .api import FordQuery, FordAccessDenied, FordThrottled, FordTransient
+from .budget import RequestBudget
+from .telemetry import normalize
+from .const import DOMAIN, CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class SafeFordCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """One coordinator per authorized vehicle. Never contacts vehicle directly."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: FordQuery) -> None:
+        self.entry = entry
+        self.api = api
+        self.poll_minutes = int(entry.options.get(CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES))
+        self.budget = RequestBudget()
+        self.cloud_fetch_time: str | None = None
+        self.request_count = 0
+        self.rate_limited_count = 0
+        self.error_count = 0
+        self.last_http_error: str | None = None
+        self.authorization_epoch = int(entry.data.get("authorization_epoch", 0))
+        self.last_options = dict(entry.options)
+        self.last_access_token = entry.data.get("token", {}).get("access_token")
+        self.store: Store[dict[str, Any]] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
+        super().__init__(
+            hass, _LOGGER, name=f"{DOMAIN}:{entry.entry_id}",
+            update_interval=timedelta(minutes=self.poll_minutes),
+            always_update=False,
+        )
+
+    async def load_cache(self) -> bool:
+        saved = await self.store.async_load()
+        if not isinstance(saved, dict):
+            return False
+        self.budget = RequestBudget(
+            next_allowed=saved.get("next_allowed", 0),
+            suspended=saved.get("suspended", False),
+        )
+        if int(saved.get("authorization_epoch", 0)) != self.authorization_epoch:
+            # ONLY a fresh explicit Ford authorization may clear an access-denied circuit breaker.
+            self.budget.suspended = False
+        self.cloud_fetch_time = saved.get("cloud_fetch_time")
+        self.request_count = int(saved.get("request_count", 0))
+        self.rate_limited_count = int(saved.get("rate_limited_count", 0))
+        self.error_count = int(saved.get("error_count", 0))
+        self.last_http_error = saved.get("last_http_error")
+        values = saved.get("values")
+        if isinstance(values, dict) and values:
+            # Restoring cache NEVER triggers a vehicle wake or status refresh.
+            self.async_set_updated_data(values)
+            return True
+        return False
+
+    def _state(self, values_override: dict[str, Any] | None = None) -> dict[str, Any]:
+        return {
+            "authorization_epoch": self.authorization_epoch,
+            "next_allowed": self.budget.next_allowed,
+            "suspended": self.budget.suspended,
+            "cloud_fetch_time": self.cloud_fetch_time,
+            "request_count": self.request_count,
+            "rate_limited_count": self.rate_limited_count,
+            "error_count": self.error_count,
+            "last_http_error": self.last_http_error,
+            "values": values_override if values_override is not None else (self.data if isinstance(self.data, dict) else {}),
+        }
+
+    async def _save_now(self, values_override: dict[str, Any] | None = None) -> None:
+        await self.store.async_save(self._state(values_override))
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        now = time.time()
+        if not self.budget.allowed(now):
+            if self.data is not None:
+                return self.data
+            raise UpdateFailed(
+                "Cloud queries suspended or cooldown in progress; safe to retry later"
+            )
+
+        self.budget.mark_started(now, self.poll_minutes)
+        self.request_count += 1
+        # Persist request reservation BEFORE any network traffic.
+        try:
+            await self._save_now()
+        except OSError as exc:
+            raise UpdateFailed("Cannot persist request budget; request blocked") from exc
+
+        try:
+            raw = await self.api.telemetry()
+            values = normalize(raw)
+        except FordThrottled as exc:
+            self.rate_limited_count += 1
+            self.last_http_error = "429"
+            self.budget.throttle(time.time(), exc.seconds)
+            await self._save_now()
+            if self.data is not None:
+                return self.data
+            raise UpdateFailed("Ford API rate-limited; next request delayed") from exc
+        except FordAccessDenied as exc:
+            self.error_count += 1
+            self.last_http_error = "401/403"
+            self.budget.forbid()
+            await self._save_now()
+            # Surface a reauthorization flow to the owner. Never silently
+            # continue making API calls against a denied account.
+            raise ConfigEntryAuthFailed("Ford authorization rejected; polling suspended") from exc
+        except (FordTransient, ValueError) as exc:
+            self.error_count += 1
+            self.last_http_error = "temporary_error"
+            self.budget.temporary_failure(time.time())
+            await self._save_now()
+            if self.data is not None:
+                return self.data
+            raise UpdateFailed("Ford telemetry not available") from exc
+
+        self.cloud_fetch_time = datetime.now(timezone.utc).isoformat()
+        self.last_http_error = None
+        # Preserve old values if Ford omits a metric for this response;
+        # never substitute a made-up "fresh" vehicle sample time.
+        merged = {**(self.data or {}), **values}
+        await self._save_now(merged)
+        return merged

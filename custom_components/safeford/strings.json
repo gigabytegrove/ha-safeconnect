@@ -1,0 +1,31 @@
+{
+  "title": "SafeFord",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Ford securely",
+        "description": "SafeFord 0.1.0 uses FordConnect Query (read-only). Register an application at the Ford Developer Marketplace and provide its OAuth Application Credentials. This integration does not wake your vehicle or provide remote commands."
+      },
+      "reauth_confirm": {
+        "title": "Reconnect Ford account",
+        "description": "Reconnect your account through Ford's official consent screen. SafeFord will continue honoring its request budget."
+      }
+    },
+    "abort": {
+      "authorization_failed": "Ford authorization failed. Verify your app credentials and consent.",
+      "cannot_connect": "Ford's cloud service was unreachable.",
+      "no_vehicle": "Ford did not return one vehicle with a valid VIN.",
+      "select_one_vehicle": "Select exactly one vehicle on Ford's consent page.",
+      "already_configured": "This vehicle is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SafeFord cloud request budget",
+        "description": "Requests read cached cloud data; they never force a vehicle update. Default is 60 minutes; permitted 15–1440 minutes. There is no guaranteed safe polling frequency.",
+        "data": { "poll_minutes": "Minimum minutes between Ford cloud queries" }
+      }
+    }
+  }
+}
