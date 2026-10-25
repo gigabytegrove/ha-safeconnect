@@ -1,13 +1,13 @@
-# SafeFord — Engineering Baseline Lock (2026-10-25)
+# SafeConnect — Engineering Baseline Lock (2026-10-25)
 
-**Status:** Paused at v0.1.1. Resume only on explicit instruction; no unattended work, alerts, or releases are scheduled.
+**Status:** Authentication testing pending after v0.2.0 alpha rebrand. Resume only on explicit instruction; no unattended work, alerts, or releases are scheduled.
 
-**Public repository:** https://github.com/gigabytegrove/ha-safeford
-**Locked code revision:** `a13c60db0c211801497d0f4ef267449e267eae43` (v0.1.1). This checkpoint commits documentation and sanitized fixtures only; it does not alter integration runtime code.
+**Public repository:** https://github.com/gigabytegrove/ha-safeconnect
+**Earlier code revision (before rebranding):** `a13c60db0c211801497d0f4ef267449e267eae43` (v0.1.1). This checkpoint commits documentation and sanitized fixtures only; it does not alter integration runtime code.
 
 ## Purpose and functional scope
 
-SafeFord is a native, publicly distributable Home Assistant integration for consented connected Ford vehicles, prioritizing account protection over polling frequency. Requirements apply across supported vehicle models and must be capability-driven, not tailored to a specific owner or car.
+SafeConnect is a native, publicly distributable Home Assistant integration for consented connected Ford vehicles, prioritizing account protection over polling frequency. Requirements apply across supported vehicle models and must be capability-driven, not tailored to a specific owner or car.
 
 Expose Ford-supplied location, fuel/range, ignition, activity, each tire's pressure, oil life, odometer, doors/hood/tailgate, lock state, and available additional telemetry. Missing or outdated data must never be fabricated or represented as current. Report actual vehicle sample time separately from Home Assistant receipt time. "Engine off" must not be assumed to mean "parked" without supporting evidence.
 
@@ -42,3 +42,7 @@ Engine controls are **not implemented in v0.1.1**. Any future implementation mus
 Do **not** commit personal names, owner-specific vehicle models, identifiable locations, genuine or plausible personal VINs, plates, account identifiers, home/IP addresses, phone numbers, email addresses, credentials, tokens, private environment details, real logs, or unredacted diagnostics. Use clearly synthetic test data. Review issues and releases before publication. Do not infer an individual's personal location or vehicle from examples.
 
 **Resume order:** Verify Ford registration availability and public-app eligibility; verify official OAuth and telemetry on a consented test vehicle; evaluate the remote lock/unlock interface and safety budget; finish release testing and HACS readiness. No changes should be undertaken automatically.
+
+## Rebrand note
+
+Project identity is now **SafeConnect**, GitHub repository is `gigabytegrove/ha-safeconnect`, and Home Assistant domain is `safeconnect`. The FordConnect API name is a third-party provider identifier, not product branding. Existing Home Assistant installations under the prior domain require an explicit migration before enabling the new domain.

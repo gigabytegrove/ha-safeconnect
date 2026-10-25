@@ -19,11 +19,11 @@ import homeassistant.helpers.config_entry_oauth2_flow as oauth2_flow
 from .const import DOMAIN, FORD_AUTHORIZE_URL, FORD_TOKEN_URL
 
 NONCE_TTL = 600
-_NONCE_KEY = "_safeford_oauth_nonces"
+_NONCE_KEY = "_safeconnect_oauth_nonces"
 
 # Targeted compatibility hook, because Ford's accepted state size differs from
 # HA's JWT state. It does not disable JWT verification for any other state.
-if not getattr(oauth2_flow._decode_jwt, "_safeford_wrapper", False):
+if not getattr(oauth2_flow._decode_jwt, "_safeconnect_wrapper", False):
     _original_decoder = oauth2_flow._decode_jwt
 
     def _decode_ford_state(hass: HomeAssistant, state: str):
@@ -39,7 +39,7 @@ if not getattr(oauth2_flow._decode_jwt, "_safeford_wrapper", False):
             return {"flow_id": flow_id}
         return _original_decoder(hass, state)
 
-    _decode_ford_state._safeford_wrapper = True
+    _decode_ford_state._safeconnect_wrapper = True
     oauth2_flow._decode_jwt = _decode_ford_state
 
 

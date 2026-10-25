@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 
-SRC = Path(__file__).resolve().parents[1] / "custom_components" / "safeford" / "telemetry.py"
-spec = importlib.util.spec_from_file_location("safeford_telemetry_test", SRC)
+SRC = Path(__file__).resolve().parents[1] / "custom_components" / "safeconnect" / "telemetry.py"
+spec = importlib.util.spec_from_file_location("safeconnect_telemetry_test", SRC)
 assert spec is not None and spec.loader is not None
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

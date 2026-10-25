@@ -3,8 +3,8 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 import pytest
 
-SRC = Path(__file__).resolve().parents[1] / "custom_components" / "safeford" / "budget.py"
-spec = importlib.util.spec_from_file_location("safeford_budget_test", SRC)
+SRC = Path(__file__).resolve().parents[1] / "custom_components" / "safeconnect" / "budget.py"
+spec = importlib.util.spec_from_file_location("safeconnect_budget_test", SRC)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 RequestBudget = module.RequestBudget

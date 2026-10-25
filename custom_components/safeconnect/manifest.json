@@ -1,0 +1,16 @@
+{
+  "domain": "safeconnect",
+  "name": "SafeConnect",
+  "version": "0.2.0a0",
+  "documentation": "https://github.com/gigabytegrove/ha-safeconnect",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [
+    "application_credentials",
+    "http"
+  ],
+  "requirements": [],
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/gigabytegrove/ha-safeconnect/issues"
+}

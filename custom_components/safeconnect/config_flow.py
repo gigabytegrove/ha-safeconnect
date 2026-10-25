@@ -18,7 +18,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class SafeFordConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
+class SafeConnectConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Authenticate through an owner-registered Ford Developer OAuth app."""
 
     # AbstractOAuth2FlowHandler.__init__ requires this class attribute.
@@ -86,10 +86,10 @@ class SafeFordConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, dom
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
-        return SafeFordOptionsFlow()
+        return SafeConnectOptionsFlow()
 
 
-class SafeFordOptionsFlow(OptionsFlow):
+class SafeConnectOptionsFlow(OptionsFlow):
     """Only allow low-frequency cloud reads."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

@@ -1,14 +1,14 @@
 {
-  "title": "SafeFord",
+  "title": "SafeConnect",
   "config": {
     "step": {
       "user": {
         "title": "Connect to Ford securely",
-        "description": "SafeFord 0.1.1 uses FordConnect Query (read-only). Register an application at the Ford Developer Marketplace and provide its OAuth Application Credentials. This integration does not wake your vehicle or provide remote commands."
+        "description": "SafeConnect 0.2.0 alpha uses FordConnect Query (read-only). Register an application at the Ford Developer Marketplace and provide its OAuth Application Credentials. This integration does not wake your vehicle or provide remote commands."
       },
       "reauth_confirm": {
         "title": "Reconnect Ford account",
-        "description": "Reconnect your account through Ford's official consent screen. SafeFord will continue honoring its request budget."
+        "description": "Reconnect your account through Ford's official consent screen. SafeConnect will continue honoring its request budget."
       }
     },
     "abort": {
@@ -22,9 +22,11 @@
   "options": {
     "step": {
       "init": {
-        "title": "SafeFord cloud request budget",
+        "title": "SafeConnect cloud request budget",
         "description": "Requests read cached cloud data; they never force a vehicle update. Default is 60 minutes; permitted 15–1440 minutes. There is no guaranteed safe polling frequency.",
-        "data": { "poll_minutes": "Minimum minutes between Ford cloud queries" }
+        "data": {
+          "poll_minutes": "Minimum minutes between Ford cloud queries"
+        }
       }
     }
   }

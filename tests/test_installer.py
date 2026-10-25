@@ -66,7 +66,7 @@ def test_install_and_refuse_overwrite(tmp_path):
     installer = ROOT / 'install-on-dockeradm.sh'
     first = subprocess.run(['bash', str(installer)], env=env, capture_output=True, text=True)
     assert first.returncode == 0, first.stderr
-    assert (config / 'custom_components/safeford/manifest.json').is_file()
+    assert (config / 'custom_components/safeconnect/manifest.json').is_file()
     assert 'restart' not in log.read_text()
     again = subprocess.run(['bash', str(installer)], env=env, capture_output=True, text=True)
     assert again.returncode == 3
@@ -87,21 +87,21 @@ def test_safe_update_preserves_config_and_backs_up(tmp_path):
     upgrade = ROOT / 'update-on-dockeradm.sh'
     r = subprocess.run(['bash', str(install)], env=env, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
-    installed = config / 'custom_components/safeford'
+    installed = config / 'custom_components/safeconnect'
     manifest = installed / 'manifest.json'
     data = json.loads(manifest.read_text())
-    data['version'] = '0.1.0'
+    data['version'] = '0.1.1'
     manifest.write_text(json.dumps(data))
     storage = config / '.storage'
     storage.mkdir()
-    (storage / 'safeford.persisted').write_text('token-store-must-survive')
+    (storage / 'safeconnect.persisted').write_text('token-store-must-survive')
     r = subprocess.run(['bash', str(upgrade), '--restart'], env=env, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
-    assert json.loads(manifest.read_text())['version'] == '0.1.1'
-    backups = list((config / '.safeford-backups').glob('safeford-*'))
+    assert json.loads(manifest.read_text())['version'] == '0.2.0a0'
+    backups = list((config / '.safeconnect-backups').glob('safeconnect-*'))
     assert len(backups) == 1
     assert json.loads((backups[0] / 'manifest.json').read_text())['version'] == '0.1.0'
-    assert (storage / 'safeford.persisted').read_text() == 'token-store-must-survive'
+    assert (storage / 'safeconnect.persisted').read_text() == 'token-store-must-survive'
     assert 'restart homeassistant' in log.read_text()
 
 def test_update_does_not_restart_without_explicit_flag(tmp_path):
@@ -118,4 +118,4 @@ def test_updater_refuses_missing_original(tmp_path):
     r = subprocess.run(['bash', str(ROOT / 'update-on-dockeradm.sh')], env=env, capture_output=True, text=True)
     assert r.returncode == 3, r.stderr
     assert 'not installed' in r.stderr
-    assert not (config / '.safeford-backups').exists()
+    assert not (config / '.safeconnect-backups').exists()

@@ -1,8 +1,8 @@
-"""Constants for SafeFord. No engine control capabilities are defined."""
+"""Constants for SafeConnect. No engine control capabilities are defined."""
 from typing import Final
 
-DOMAIN: Final = "safeford"
-NAME: Final = "SafeFord"
+DOMAIN: Final = "safeconnect"
+NAME: Final = "SafeConnect"
 CONF_VIN: Final = "vin"
 CONF_VEHICLE_NAME: Final = "vehicle_name"
 CONF_POLL_MINUTES: Final = "poll_minutes"

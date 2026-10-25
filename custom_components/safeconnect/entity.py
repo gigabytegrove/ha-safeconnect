@@ -1,15 +1,15 @@
-"""Shared SafeFord device and caching behavior."""
+"""Shared SafeConnect device and caching behavior."""
 from __future__ import annotations
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from .coordinator import SafeFordCoordinator
+from .coordinator import SafeConnectCoordinator
 from .const import CONF_VIN, CONF_VEHICLE_NAME
 
 
-class SafeFordEntity(CoordinatorEntity[SafeFordCoordinator]):
+class SafeConnectEntity(CoordinatorEntity[SafeConnectCoordinator]):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, coordinator: SafeFordCoordinator, key: str) -> None:
+    def __init__(self, coordinator: SafeConnectCoordinator, key: str) -> None:
         super().__init__(coordinator)
         self._key = key
         self._attr_unique_id = f"{coordinator.entry.data[CONF_VIN]}_{key}"
@@ -17,7 +17,7 @@ class SafeFordEntity(CoordinatorEntity[SafeFordCoordinator]):
     @property
     def device_info(self):
         return {
-            "identifiers": {("safeford", self.coordinator.entry.data[CONF_VIN])},
+            "identifiers": {("safeconnect", self.coordinator.entry.data[CONF_VIN])},
             "name": self.coordinator.entry.data.get(CONF_VEHICLE_NAME, "Ford Vehicle"),
             "manufacturer": "Ford",
         }

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from .entity import SafeFordEntity
+from .entity import SafeConnectEntity
 from .const import DOMAIN
 
 
@@ -49,10 +49,10 @@ SPECS: tuple[SensorSpec, ...] = (
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SafeFordSensor(coordinator, spec) for spec in SPECS])
+    async_add_entities([SafeConnectSensor(coordinator, spec) for spec in SPECS])
 
 
-class SafeFordSensor(SafeFordEntity, SensorEntity):
+class SafeConnectSensor(SafeConnectEntity, SensorEntity):
     def __init__(self, coordinator, spec: SensorSpec) -> None:
         super().__init__(coordinator, spec.key)
         self._attr_name = spec.name

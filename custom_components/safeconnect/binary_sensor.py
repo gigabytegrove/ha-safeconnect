@@ -3,7 +3,7 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorDeviceClass
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from .entity import SafeFordEntity
+from .entity import SafeConnectEntity
 from .const import DOMAIN
 
 DOORS = {
@@ -18,10 +18,10 @@ DOORS = {
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SafeFordDoor(coordinator, key, name) for key, name in DOORS.items()])
+    async_add_entities([SafeConnectDoor(coordinator, key, name) for key, name in DOORS.items()])
 
 
-class SafeFordDoor(SafeFordEntity, BinarySensorEntity):
+class SafeConnectDoor(SafeConnectEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     def __init__(self, coordinator, key: str, name: str) -> None:

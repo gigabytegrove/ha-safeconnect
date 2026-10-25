@@ -3,16 +3,16 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import TrackerEntity, SourceType
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from .entity import SafeFordEntity
+from .entity import SafeConnectEntity
 from .const import DOMAIN
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SafeFordTracker(coordinator)])
+    async_add_entities([SafeConnectTracker(coordinator)])
 
 
-class SafeFordTracker(SafeFordEntity, TrackerEntity):
+class SafeConnectTracker(SafeConnectEntity, TrackerEntity):
     _attr_name = "Last known vehicle location"
     _attr_icon = "mdi:car-wireless"
 

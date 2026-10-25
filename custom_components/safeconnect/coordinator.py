@@ -17,7 +17,7 @@ from .const import DOMAIN, CONF_POLL_MINUTES, DEFAULT_POLL_MINUTES
 _LOGGER = logging.getLogger(__name__)
 
 
-class SafeFordCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class SafeConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """One coordinator per authorized vehicle. Never contacts vehicle directly."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: FordQuery) -> None:

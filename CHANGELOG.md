@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0-alpha — 2026-10-25
+
+BREAKING CHANGE: The Home Assistant integration name is now SafeConnect and domain is `safeconnect` (previously a different domain). Moving from the old domain requires an explicit HA integration migration, not simply a GitHub rename.
+
+SECURITY: No user secrets or personal vehicle details in source; each HA instance uses its own owner-authorized OAuth credentials, and no central service receives authentication or telemetry. Confidential developer app secrets are never bundled.
+
+MIGRATION: New `migrate-on-dockeradm.sh` stages and backs up the old integration files, and blocks if Home Assistant retains an active config entry for the old domain; it does not edit Home Assistant storage behind HA's back.
+
+
 ## 0.1.1 — 2026-10-25
 
 FIX: OAuth config flow now declares the required `DOMAIN` class attribute; Home Assistant's OAuth flow handler rejected the prior class with TypeError, consistent with the 500 config-flow error.

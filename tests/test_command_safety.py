@@ -1,7 +1,7 @@
 """Guard against adding remote engine operations in this read-only milestone."""
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parents[1] / "custom_components" / "safeford"
+BASE = Path(__file__).resolve().parents[1] / "custom_components" / "safeconnect"
 
 
 def test_no_command_endpoints_or_wake_methods():

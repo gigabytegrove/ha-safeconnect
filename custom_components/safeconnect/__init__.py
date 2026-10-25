@@ -1,4 +1,4 @@
-"""SafeFord: intentionally read-only FordConnect Query HA integration."""
+"""SafeConnect: intentionally read-only FordConnect Query HA integration."""
 from __future__ import annotations
 import logging
 from homeassistant.config_entries import ConfigEntry
@@ -9,7 +9,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import Platform
 from .api import FordQuery
-from .coordinator import SafeFordCoordinator
+from .coordinator import SafeConnectCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,9 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ValueError as exc:
-        raise ConfigEntryNotReady("SafeFord OAuth application credentials are unavailable") from exc
+        raise ConfigEntryNotReady("SafeConnect OAuth application credentials are unavailable") from exc
     session = OAuth2Session(hass, entry, implementation)
-    coordinator = SafeFordCoordinator(hass, entry, FordQuery(session))
+    coordinator = SafeConnectCoordinator(hass, entry, FordQuery(session))
     cached = await coordinator.load_cache()
     if not cached:
         # First run only. If Ford is unavailable, HA can retry while our
