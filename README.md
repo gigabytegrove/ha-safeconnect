@@ -1,6 +1,14 @@
-# SafeConnect — Home Assistant integration (v0.2.0 alpha)
+# SafeConnect — Home Assistant integration (v0.2.0 alpha.1)
 
 A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.2.0 alpha.
+
+## Current field-test status
+
+The official cloud authorization and one telemetry read have been verified in a Home Assistant installation. A local cache held non-empty values for supported fields, while the entity interface appeared empty. The alpha.1 change rebroadcasts locally restored data after entity setup, without making extra Ford API requests. Live UI confirmation is still required.
+
+For a previous `safeconnect` installation, pull this repository and run `update-on-dockeradm.sh --restart`; do not register another Ford application or reauthorize just for an update.
+
+**HACS note:** If HACS reports a 404 for an archive URL containing a short Git commit under `archive/refs/heads/`, that is a HACS archive-reference issue, separate from the telemetry cache. Use the reviewed Docker-host updater until HACS release behavior has been verified.
 
 ## Implemented
 

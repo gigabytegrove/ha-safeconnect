@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0-alpha.1 — 2026-10-25
+
+FIX: Explicitly republish previously cached telemetry to the newly subscribed Home Assistant entities after their platforms finish setup. This local state synchronization does not contact Ford or reset account lockout protections.
+
+DIAGNOSTICS: Log the count of restored telemetry fields (not their values, VINs or GPS) at debug level. No credentials, telemetry values or personally identifiable information are written to source.
+
+LIMITATION: The exact cause of blank GUI states is not yet verified against a running Home Assistant instance. This is a safe cache-state synchronization correction, not a claim that every displayed entity has been fixed.
+
+
 ## 0.2.0-alpha — 2026-10-25
 
 BREAKING CHANGE: The Home Assistant integration name is now SafeConnect and domain is `safeconnect` (previously a different domain). Moving from the old domain requires an explicit HA integration migration, not simply a GitHub rename.
