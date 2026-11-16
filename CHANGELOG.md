@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0-alpha.6 — 2026-11-16
+
+SECURITY: Limit short Ford OAuth callback states to bounded, single-use 16-hex nonces with a strict 10-minute lifetime, maximum 32 concurrent attempts and exact redirect-URI binding. No credentials or tokens are included in the state. Normal Home Assistant signed states still use the original JWT verification.
+
+COMPATIBILITY: The scoped Ford callback wrapper remains necessary because Home Assistant Core 2026.11.1 has no per-integration short-state decoder and Ford rejects the normal JWT-sized state. Tests explicitly check this safety boundary and fail closed for stale/replayed states.
+
+TESTS: Add deterministic state-lifecycle tests, Python compilation and a pinned Home Assistant Core 2026.11.1 integration-import gate. No additional Ford API calls or vehicle commands were added. Preserve all entities and stored OAuth sessions.
+
+
 ## 0.2.0-alpha.5 — 2026-10-25
 
 GPS: Expose GPS latitude and longitude as standalone numerical Home Assistant sensors, plus a locally refreshed GPS sample-age sensor (minutes). Keep the existing last-known GPS device tracker and GPS report timestamp sensor.

@@ -6,8 +6,6 @@ Only nonce values generated in this integration are accepted; all other state
 values use Home Assistant's original, signature-verifying decoder.
 """
 from __future__ import annotations
-import secrets
-import time
 from yarl import URL
 from aiohttp import ClientError
 from homeassistant.components.application_credentials import (
@@ -17,27 +15,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 import homeassistant.helpers.config_entry_oauth2_flow as oauth2_flow
 from .const import DOMAIN, FORD_AUTHORIZE_URL, FORD_TOKEN_URL
+from .oauth_state import create_ford_state, consume_ford_state
 
-NONCE_TTL = 600
-_NONCE_KEY = "_safeconnect_oauth_nonces"
-
-# Targeted compatibility hook, because Ford's accepted state size differs from
-# HA's JWT state. It does not disable JWT verification for any other state.
+# Home Assistant 2026.11.1 exposes no per-integration callback-state decoder.
+# Retain the smallest possible scoped compatibility wrapper until Ford accepts
+# normal signed JWT state. All other OAuth states use HA's original verification.
 if not getattr(oauth2_flow._decode_jwt, "_safeconnect_wrapper", False):
     _original_decoder = oauth2_flow._decode_jwt
 
     def _decode_ford_state(hass: HomeAssistant, state: str):
-        pending = hass.data.get(_NONCE_KEY, {})
-        now = time.monotonic()
-        # Discard expired attempts; consume any matched nonce only once.
-        for key, (_, created) in list(pending.items()):
-            if now - created > NONCE_TTL:
-                pending.pop(key, None)
-        entry = pending.pop(state, None)
-        if entry is not None:
-            flow_id, _created = entry
-            return {"flow_id": flow_id}
-        return _original_decoder(hass, state)
+        ford_state = consume_ford_state(hass, state)
+        return ford_state if ford_state is not None else _original_decoder(hass, state)
 
     _decode_ford_state._safeconnect_wrapper = True
     oauth2_flow._decode_jwt = _decode_ford_state
@@ -45,8 +33,7 @@ if not getattr(oauth2_flow._decode_jwt, "_safeconnect_wrapper", False):
 
 class FordOAuth(LocalOAuth2Implementation):
     async def async_generate_authorize_url(self, flow_id: str) -> str:
-        state = secrets.token_hex(8)  # Ford currently requires <= 16 chars.
-        self.hass.data.setdefault(_NONCE_KEY, {})[state] = (flow_id, time.monotonic())
+        state = create_ford_state(self.hass, flow_id, self.redirect_uri)
         return str(URL(self.authorize_url).with_query({
             "response_type": "code",
             "client_id": self.client_id,

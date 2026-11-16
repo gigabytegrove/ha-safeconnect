@@ -1,4 +1,4 @@
-# SafeConnect — Home Assistant integration (v0.2.0 alpha.5)
+# SafeConnect — Home Assistant integration (v0.2.0 alpha.6)
 
 A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.2.0 alpha.
 
