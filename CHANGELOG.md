@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0-alpha.7 — 2026-11-16
+
+OAUTH CORRECTNESS: Exchange Ford's authorization code with the exact redirect URI saved in the validated, single-use state when the consent flow started. Do not re-read the dynamically configured Home Assistant redirect URL during the exchange, which could change between authorization and callback and cause a Ford authorization failure.
+
+SECURITY: Reject callbacks with no code, no validated state, or a missing redirect URI before any token exchange. Continue delegating every non-Ford state to Home Assistant's signed JWT verification and preserve the ten-minute, one-use Ford nonce policy.
+
+TESTS: Add callback state, redirect consistency and malformed-state regression tests to the Home Assistant Core 2026.11.1 CI gate. No change to stored credentials, Ford polling cadence, entity IDs, diagnostic privacy or read-only API behavior.
+
+
 ## 0.2.0-alpha.6 — 2026-11-16
 
 SECURITY: Limit short Ford OAuth callback states to bounded, single-use 16-hex nonces with a strict 10-minute lifetime, maximum 32 concurrent attempts and exact redirect-URI binding. No credentials or tokens are included in the state. Normal Home Assistant signed states still use the original JWT verification.

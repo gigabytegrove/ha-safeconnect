@@ -1,4 +1,4 @@
-# SafeConnect — Home Assistant integration (v0.2.0 alpha.6)
+# SafeConnect — Home Assistant integration (v0.2.0 alpha.7)
 
 A native Home Assistant integration for FordConnect Query, intended for supported connected Ford vehicles. It reads vehicle data only, through Ford's consent-based OAuth2 data API. It NEVER sends vehicle wake, remote start/stop, lock, or unlock commands in 0.2.0 alpha.
 
@@ -137,3 +137,7 @@ bash -n migrate-on-dockeradm.sh
 ```
 
 The offline unit tests verify representative Ford payload parsing and rate-limit behavior. Real API integration requires testing with your own Ford developer authorization and a compatible test vehicle.
+
+## OAuth redirect consistency (alpha.7)
+
+Ford's short, one-time OAuth state stores the exact redirect URI from the authorization request. The token exchange now reuses that original URI, even if Home Assistant's configured external URL changes before Ford calls back. Missing or malformed callback state fails closed without submitting a token request. Existing Ford credentials and connected vehicle entities are not changed; this does not initiate reauthorization or extra telemetry requests. Home Assistant Core 2026.11.1 integration compatibility is checked in CI, but live Ford consent remains subject to owner verification.

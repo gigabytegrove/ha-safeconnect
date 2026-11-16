@@ -43,13 +43,19 @@ class FordOAuth(LocalOAuth2Implementation):
 
     async def async_resolve_external_data(self, external_data: dict) -> dict:
         code = external_data.get("code")
-        if not isinstance(code, str) or not code:
+        state = external_data.get("state")
+        if not isinstance(code, str) or not code or not isinstance(state, dict):
+            return {}
+        # The authorization code is bound to the redirect URI used when
+        # authorization began, not the HA URL configured at callback time.
+        redirect_uri = state.get("redirect_uri")
+        if not isinstance(redirect_uri, str) or not redirect_uri:
             return {}
         try:
             return await self._token_request({
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": self.redirect_uri,
+                "redirect_uri": redirect_uri,
             })
         except ClientError:
             return {}
